@@ -11,7 +11,7 @@ SRC_URI[sha256sum] = "5ad462c4a9b8433685eef816090cb9fbc83a88126ea1fc5c0495ad79bf
 
 LIC_FILES_CHKSUM = "file://${WORKDIR}/linux-${PV}/COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
 
-MACHINE_KERNEL_PR_append = ".11"
+MACHINE_KERNEL_PR_append = ".12"
 
 # By default, kernel.bbclass modifies package names to allow multiple kernels
 # to be installed in parallel. We revert this change and rprovide the versioned
@@ -21,7 +21,7 @@ PKG_kernel-image = "kernel-image"
 RPROVIDES_kernel-base = "kernel-${KERNEL_VERSION}"
 RPROVIDES_kernel-image = "kernel-image-${KERNEL_VERSION}"
 
-SRC_URI += "http://118.37.185.125/download/stblinux/stblinux-3.3.0-20130404.tgz \
+SRC_URI += "http://source.mynonpublic.com/stblinux-3.3.0-20130404.tgz \
 	file://defconfig \
 	file://fix-proc-cputype.patch \
 	file://0001-Revert-MIPS-Add-fast-get_user_pages.patch \
@@ -56,9 +56,9 @@ SRC_URI += "http://118.37.185.125/download/stblinux/stblinux-3.3.0-20130404.tgz 
 	file://nfs-max-rwsize-8k.patch \
 	"
 
-S = "${WORKDIR}/linux-${PV}"
-
 inherit kernel machine_kernel_pr
+
+S = "${WORKDIR}/linux-${PV}"
 
 export OS = "Linux"
 KERNEL_OBJECT_SUFFIX = "ko"
@@ -69,8 +69,12 @@ KERNEL_IMAGEDEST = "/tmp"
 FILES_kernel-image = "${KERNEL_IMAGEDEST}/${KERNEL_IMAGETYPE}.gz"
 
 do_configure_prepend() {
-	oe_machinstall -m 0644 ${WORKDIR}/defconfig ${S}/.config
-	oe_runmake oldconfig
+	rm -rf ${STAGING_KERNEL_DIR}/.cofig
+	rm -rf ${STAGING_KERNEL_DIR}/.config
+	rm -rf ${STAGING_KERNEL_DIR}/.config.old
+	rm -rf ${STAGING_KERNEL_DIR}/include/generated
+	rm -rf ${STAGING_KERNEL_DIR}/include/config
+	rm -rf ${STAGING_KERNEL_DIR}/arch/mips/include/generated
 }
 
 kernel_do_install_append() {
