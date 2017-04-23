@@ -67,7 +67,7 @@ S = "${WORKDIR}/linux-${PV}"
 B = "${WORKDIR}/build"
 
 export OS = "Linux"
-KERNEL_IMAGETYPE = "vmlinux.gz"
+
 KERNEL_IMAGEDEST = "tmp"
 
 FILES_kernel-image = "${KERNEL_IMAGEDEST}/${KERNEL_IMAGETYPE}*"
