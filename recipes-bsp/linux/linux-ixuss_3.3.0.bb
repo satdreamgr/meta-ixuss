@@ -4,6 +4,8 @@ LICENSE = "GPLv2"
 
 COMPATIBLE_MACHINE = "ixuss(zero|one)"
 
+inherit kernel machine_kernel_pr
+
 KERNEL_RELEASE = "3.3.0"
 
 SRC_URI[md5sum] = "a2fbd9e424a8d0d6157fcb25e08ec393"
@@ -11,7 +13,7 @@ SRC_URI[sha256sum] = "5ad462c4a9b8433685eef816090cb9fbc83a88126ea1fc5c0495ad79bf
 
 LIC_FILES_CHKSUM = "file://${WORKDIR}/linux-${PV}/COPYING;md5=d7810fab7487fb0aad327b76f1be7cd7"
 
-MACHINE_KERNEL_PR_append = ".12"
+MACHINE_KERNEL_PR_append = ".15"
 
 # By default, kernel.bbclass modifies package names to allow multiple kernels
 # to be installed in parallel. We revert this change and rprovide the versioned
@@ -24,6 +26,7 @@ RPROVIDES_kernel-image = "kernel-image-${KERNEL_VERSION}"
 SRC_URI += "http://source.mynonpublic.com/stblinux-3.3.0-20130404.tgz \
 	file://defconfig \
 	file://fix-proc-cputype.patch \
+	file://fixme-hardfloat.patch \
 	file://0001-Revert-MIPS-Add-fast-get_user_pages.patch \
 	file://disable_early_fb.patch \
 	file://iosched-slice_idle-1.patch \
@@ -54,19 +57,20 @@ SRC_URI += "http://source.mynonpublic.com/stblinux-3.3.0-20130404.tgz \
 	file://dvb_usb_disable_rc_polling.patch \
 	file://dvb-usb-siano-always-load-smsdvb.patch \
 	file://nfs-max-rwsize-8k.patch \
+	file://rtl8712-fix-warnings.patch \
+	file://rtl8187se-fix-warnings.patch \
+	file://kernel-add-support-for-gcc6.patch \
+	file://timeconst_perl5.patch \
 	"
 
-inherit kernel machine_kernel_pr
-
 S = "${WORKDIR}/linux-${PV}"
+B = "${WORKDIR}/build"
 
 export OS = "Linux"
-KERNEL_OBJECT_SUFFIX = "ko"
-KERNEL_OUTPUT = "vmlinux"
-KERNEL_IMAGETYPE = "vmlinux"
-KERNEL_IMAGEDEST = "/tmp"
+KERNEL_IMAGETYPE = "vmlinux.gz"
+KERNEL_IMAGEDEST = "tmp"
 
-FILES_kernel-image = "${KERNEL_IMAGEDEST}/${KERNEL_IMAGETYPE}.gz"
+FILES_kernel-image = "${KERNEL_IMAGEDEST}/${KERNEL_IMAGETYPE}*"
 
 do_configure_prepend() {
 	rm -rf ${STAGING_KERNEL_DIR}/.cofig
@@ -77,19 +81,19 @@ do_configure_prepend() {
 	rm -rf ${STAGING_KERNEL_DIR}/arch/mips/include/generated
 }
 
-kernel_do_install_append() {
-	${STRIP} ${D}${KERNEL_IMAGEDEST}/${KERNEL_IMAGETYPE}-${KERNEL_VERSION}
-	gzip -9c ${D}${KERNEL_IMAGEDEST}/${KERNEL_IMAGETYPE}-${KERNEL_VERSION} > ${D}${KERNEL_IMAGEDEST}/${KERNEL_IMAGETYPE}.gz
-	rm ${D}${KERNEL_IMAGEDEST}/${KERNEL_IMAGETYPE}-${KERNEL_VERSION}
-}
-
 pkg_postinst_kernel-image () {
 	if [ "x$D" == "x" ]; then
-		if [ -f /${KERNEL_IMAGEDEST}/${KERNEL_IMAGETYPE}.gz ] ; then
+		if [ -f /${KERNEL_IMAGEDEST}/${KERNEL_IMAGETYPE}-${KERNEL_VERSION} ] ; then
 			flash_eraseall /dev/mtd1
-			nandwrite -p /dev/mtd1 /${KERNEL_IMAGEDEST}/${KERNEL_IMAGETYPE}.gz
-			rm -f /${KERNEL_IMAGEDEST}/${KERNEL_IMAGETYPE}.gz
+			nandwrite -p /dev/mtd1 /${KERNEL_IMAGEDEST}/${KERNEL_IMAGETYPE}-${KERNEL_VERSION}
+			rm -f /${KERNEL_IMAGEDEST}/${KERNEL_IMAGETYPE}-${KERNEL_VERSION}
 		fi
 	fi
 	true
+}
+
+pkg_postrm_kernel-image () {
+}
+
+do_rm_work() {
 }
